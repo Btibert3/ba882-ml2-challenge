@@ -1,0 +1,7 @@
+nba_challenge:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '/usr/local/airflow/nba.duckdb') }}"
+      threads: 4

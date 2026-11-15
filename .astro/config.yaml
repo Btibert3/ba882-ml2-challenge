@@ -1,0 +1,4 @@
+project:
+  name: ba882-nba-challenge
+dev:
+  mode: standalone

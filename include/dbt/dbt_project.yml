@@ -1,0 +1,16 @@
+name: nba_challenge
+version: "1.0.0"
+profile: nba_challenge
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  nba_challenge:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    gold:
+      +materialized: table
