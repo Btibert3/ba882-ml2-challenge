@@ -47,27 +47,21 @@ MODEL_CONFIGS = [
     # {"algorithm": "gradient_boosting",   "hyperparameters": {"n_estimators": 100, "learning_rate": 0.1}},
 ]
 
-FEATURE_COLS = [
-    "x",
-    "y",
-]
+# Columns used to identify a shot for submission — never used as features
+ID_COLS = ["game_id", "action_number"]
+
+# The target column
+TARGET = "shot_result"
 
 
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Build the feature matrix from a gold_shots DataFrame.
-    Add new columns here — the same logic runs on both training and eval rows.
+    Automatically uses every column in gold_shots except the IDs and target.
+    To add features: add columns to gold_shots.sql in dbt, then re-run dbt_dag.
     """
-    out = df[FEATURE_COLS].copy()
-
-    # ----------------------------------------------------------------
-    # Add your own features here. Examples:
-    #   out["is_three"] = (df["shot_value"] == 3).astype(int)
-    #   out["is_clutch"] = ((df["period"] == 4) & (df["clock_seconds"] < 120)).astype(int)
-    #   out["dist_squared"] = df["shot_distance"] ** 2
-    # ----------------------------------------------------------------
-
-    return out.fillna(0)
+    drop_cols = set(ID_COLS + [TARGET])
+    feature_cols = [c for c in df.columns if c not in drop_cols]
+    return df[feature_cols].fillna(0)
 
 
 @dag(
