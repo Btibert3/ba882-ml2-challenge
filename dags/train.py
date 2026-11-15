@@ -59,7 +59,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     Automatically uses every column in gold_shots except the IDs and target.
     To add features: add columns to gold_shots.sql in dbt, then re-run dbt_dag.
     """
-    drop_cols = set(ID_COLS + [TARGET])
+    drop_cols = set(ID_COLS + [TARGET, "label"])
     feature_cols = [c for c in df.columns if c not in drop_cols]
     return df[feature_cols].fillna(0)
 
