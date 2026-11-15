@@ -51,6 +51,7 @@ Copy the URL it prints. Paste it into `.env` as `TRAIN_FUNCTION_URL`.
 ```bash
 astro dev start
 ```
+Open the web preview on port 8080. Log in with `admin` / `admin`.
 
 ---
 

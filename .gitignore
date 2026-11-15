@@ -1,1 +1,10 @@
 .env
+airflow_settings.yaml
+nba.duckdb
+include/dbt/target/
+include/dbt/dbt_packages/
+include/dbt/logs/
+logs/
+__pycache__/
+*.pyc
+.DS_Store
