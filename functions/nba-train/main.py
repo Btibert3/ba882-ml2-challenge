@@ -20,11 +20,8 @@ from sklearn.metrics import accuracy_score
 
 
 FEATURE_COLS = [
-    "shot_distance",
-    "shot_value",
-    "period",
-    "clock_seconds",
-    "is_home_shooter",
+    "x",
+    "y",
 ]
 
 

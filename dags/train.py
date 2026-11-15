@@ -21,6 +21,7 @@ Edit points:
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 
 import duckdb
 import requests
@@ -28,7 +29,7 @@ from airflow.decorators import dag, task
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.empty import EmptyOperator
 
-DUCKDB_PATH = os.environ.get("DUCKDB_PATH", "/usr/local/airflow/nba.duckdb")
+DUCKDB_PATH = os.environ.get("DUCKDB_PATH", str((Path(__file__).parent / "../nba.duckdb").resolve()))
 TRAIN_FUNCTION_URL = os.environ.get("TRAIN_FUNCTION_URL", "")
 
 # Minimum validation accuracy before predictions are submitted

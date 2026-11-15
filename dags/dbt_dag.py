@@ -15,8 +15,8 @@ from pathlib import Path
 from cosmos import DbtDag, ProjectConfig, ProfileConfig, ExecutionConfig
 from cosmos.constants import ExecutionMode
 
-DBT_PROJECT_PATH = Path("/usr/local/airflow/include/dbt")
-DBT_PROFILES_PATH = Path("/usr/local/airflow/include/dbt")
+DBT_PROJECT_PATH = (Path(__file__).parent / "../include/dbt").resolve()
+DBT_PROFILES_PATH = DBT_PROJECT_PATH
 
 # On Cloud Shell, dbt is installed at ~/.local/bin/dbt
 # Set DBT_EXECUTABLE_PATH in your .env if the default doesn't match:

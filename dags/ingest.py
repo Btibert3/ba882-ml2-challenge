@@ -16,6 +16,7 @@ Flow:
 
 import os
 from datetime import datetime
+from pathlib import Path
 
 import duckdb
 import requests
@@ -23,7 +24,7 @@ from airflow.decorators import dag, task
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 API_BASE = os.environ.get("API_BASE", "https://btibert-bu--ba882-nba-ship-it")
-DUCKDB_PATH = os.environ.get("DUCKDB_PATH", "/usr/local/airflow/nba.duckdb")
+DUCKDB_PATH = os.environ.get("DUCKDB_PATH", str((Path(__file__).parent / "../nba.duckdb").resolve()))
 
 
 def get_conn():
