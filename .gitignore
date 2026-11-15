@@ -1,6 +1,5 @@
 .env
 airflow_settings.yaml
-nba.duckdb
 .astro/standalone/
 include/dbt/target/
 include/dbt/dbt_packages/

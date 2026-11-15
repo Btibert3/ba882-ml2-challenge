@@ -1,44 +1,44 @@
 """
 Trains models in parallel, picks the best one, and submits predictions.
 
-Trigger this manually after:
-  1. Editing and deploying your Cloud Function (bash functions/deploy.sh)
-  2. Running dbt (trigger dbt_dag, or re-trigger ingest)
+Trigger this manually after running dbt_dag.
 
 Flow:
   load_data
-    └── .expand() over MODEL_CONFIGS ──► call Cloud Function (one task per config)
+    └── .expand() over MODEL_CONFIGS ──► train_model (one task per config)
           └── pick_best
                 └── @task.branch ──► good enough to submit?
                       ├── YES ──► triggers submit_dag
                       └── NO  ──► skip
 
 Edit points:
-  1. Add more configs to MODEL_CONFIGS to run more experiments in parallel
-  2. Adjust DEPLOY_THRESHOLD — how good does the model need to be before submitting?
+  1. Add features in build_features() below
+  2. Add more configs to MODEL_CONFIGS to run more experiments in parallel
+  3. Adjust DEPLOY_THRESHOLD — how good does the model need to be before submitting?
 """
 
-import json
 import os
 from datetime import datetime
 from pathlib import Path
 
 import duckdb
-import requests
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 from airflow.sdk import dag, task
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", str((Path(__file__).parent / "../nba.duckdb").resolve()))
-TRAIN_FUNCTION_URL = os.environ.get("TRAIN_FUNCTION_URL", "")
 
 # Minimum validation accuracy before predictions are submitted
 DEPLOY_THRESHOLD = 0.55
 
 # -----------------------------------------------------------------------
 # Each entry here becomes one parallel task in the Airflow graph.
-# "algorithm" must match a block in functions/nba-train/main.py.
-# "hyperparameters" are passed directly to the sklearn model constructor —
-# for example, n_estimators=100 is the same as RandomForestClassifier(n_estimators=100).
+# "algorithm" must match an elif block in train_model() below.
+# "hyperparameters" are passed directly to the sklearn model constructor.
 # Uncomment rows to run more experiments, or add your own.
 # -----------------------------------------------------------------------
 MODEL_CONFIGS = [
@@ -46,6 +46,28 @@ MODEL_CONFIGS = [
     # {"algorithm": "random_forest",       "hyperparameters": {"n_estimators": 100}},
     # {"algorithm": "gradient_boosting",   "hyperparameters": {"n_estimators": 100, "learning_rate": 0.1}},
 ]
+
+FEATURE_COLS = [
+    "x",
+    "y",
+]
+
+
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build the feature matrix from a gold_shots DataFrame.
+    Add new columns here — the same logic runs on both training and eval rows.
+    """
+    out = df[FEATURE_COLS].copy()
+
+    # ----------------------------------------------------------------
+    # Add your own features here. Examples:
+    #   out["is_three"] = (df["shot_value"] == 3).astype(int)
+    #   out["is_clutch"] = ((df["period"] == 4) & (df["clock_seconds"] < 120)).astype(int)
+    #   out["dist_squared"] = df["shot_distance"] ** 2
+    # ----------------------------------------------------------------
+
+    return out.fillna(0)
 
 
 @dag(
@@ -59,41 +81,72 @@ def train():
     @task()
     def load_data():
         con = duckdb.connect(DUCKDB_PATH, read_only=True)
-
-        # Rows where the outcome is known — used for training
         train_df = con.execute(
             "SELECT * FROM gold_shots WHERE shot_result IS NOT NULL"
         ).df()
-
-        # Rows where the outcome is hidden — your predictions on these go to the leaderboard
         eval_df = con.execute(
             "SELECT * FROM gold_shots WHERE shot_result IS NULL"
         ).df()
-
         con.close()
         print(f"train rows: {len(train_df)} | eval rows: {len(eval_df)}")
-
         return {
             "train": train_df.to_dict(orient="records"),
             "eval": eval_df.to_dict(orient="records"),
         }
 
     @task()
-    def run_experiment(data: dict, config: dict):
-        """Call the Cloud Function with one model config."""
-        if not TRAIN_FUNCTION_URL:
-            raise ValueError("TRAIN_FUNCTION_URL is not set — add it to your .env file")
+    def train_model(data: dict, config: dict):
+        """Train one model config locally and return metrics + predictions."""
+        algorithm = config.get("algorithm", "logistic_regression")
+        hyperparams = config.get("hyperparameters", {})
 
-        payload = {
+        train_df = pd.DataFrame(data["train"])
+        eval_df = pd.DataFrame(data["eval"])
+
+        train_df["label"] = (train_df["shot_result"] == "Made").astype(int)
+
+        X_all = build_features(train_df)
+        y_all = train_df["label"]
+
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_all, y_all, test_size=0.2, random_state=42
+        )
+
+        if algorithm == "logistic_regression":
+            model = LogisticRegression(**hyperparams, random_state=42)
+
+        elif algorithm == "random_forest":
+            model = RandomForestClassifier(**hyperparams, random_state=42)
+
+        elif algorithm == "gradient_boosting":
+            model = GradientBoostingClassifier(**hyperparams, random_state=42)
+
+        else:
+            raise ValueError(f"unknown algorithm: {algorithm}")
+
+        model.fit(X_train, y_train)
+
+        accuracy = float(accuracy_score(y_val, model.predict(X_val)))
+        print(f"algorithm={algorithm} | val_accuracy={accuracy:.4f} | "
+              f"train={len(X_train)} | val={len(X_val)}")
+
+        X_eval = build_features(eval_df)
+        eval_preds = model.predict(X_eval).tolist()
+
+        predictions = [
+            {
+                "gameId": row["game_id"],
+                "actionNumber": int(row["action_number"]),
+                "made": int(pred),
+            }
+            for row, pred in zip(data["eval"], eval_preds)
+        ]
+
+        return {
             "config": config,
-            "train": data["train"],
-            "eval": data["eval"],
+            "metrics": {"accuracy": round(accuracy, 4)},
+            "predictions": predictions,
         }
-        resp = requests.post(TRAIN_FUNCTION_URL, json=payload, timeout=120)
-        resp.raise_for_status()
-        result = resp.json()
-        print(f"config={config['algorithm']} | accuracy={result.get('metrics', {}).get('accuracy')}")
-        return result
 
     @task()
     def pick_best(results: list):
@@ -122,10 +175,10 @@ def train():
 
     @task()
     def skip():
-        print(f"model did not clear threshold — skipping submission")
+        print("model did not clear threshold — skipping submission")
 
     data = load_data()
-    results = run_experiment.partial(data=data).expand(config=MODEL_CONFIGS)
+    results = train_model.partial(data=data).expand(config=MODEL_CONFIGS)
     best = pick_best(results)
     branch = should_deploy(best)
     branch >> [trigger_submit, skip()]

@@ -1,6 +1,9 @@
 # BA882 — NBA Shot Challenge
 
-Predict whether an NBA shot goes in. Build a pipeline, train a model, climb the leaderboard.
+Predict whether an NBA shot goes in. Iterate on features and models to climb the leaderboard.
+
+The raw data is already loaded in `nba.duckdb` — no ingestion step needed.
+Your job is to build features, train models, and submit predictions.
 
 ---
 
@@ -14,6 +17,9 @@ gcloud config set project YOUR_PROJECT_ID
 **2. Clone the repo**
 ```bash
 git clone https://github.com/btibert3/ba882-ml2-challenge.git
+```
+
+```bash
 cd ba882-ml2-challenge
 ```
 
@@ -26,6 +32,7 @@ bash setup/install_astro.sh
 ```bash
 cp .env.example .env
 ```
+
 Open `.env` and set your team number.
 
 ```bash
@@ -36,16 +43,11 @@ echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
 echo "DBT_EXECUTABLE_PATH=$(pwd)/.venv/bin/dbt" >> .env
 ```
 
-**5. Deploy your Cloud Function**
-```bash
-bash functions/deploy.sh
-```
-Copy the URL it prints. Paste it into `.env` as `TRAIN_FUNCTION_URL`.
-
-**6. Start Airflow**
+**5. Start Airflow**
 ```bash
 astro dev start
 ```
+
 Open the web preview on port 8080. Log in with `admin` / `admin`.
 
 ---
@@ -54,9 +56,10 @@ Open the web preview on port 8080. Log in with `admin` / `admin`.
 
 Trigger DAGs in this order from the Airflow UI:
 
-1. **`ingest`** — loads raw data into DuckDB, then auto-triggers dbt (~4 minutes total; the final `load_plays` step takes ~3 minutes)
-2. **`dbt_dag`** — builds your models (re-trigger this after editing dbt, no need to re-ingest)
-3. **`train`** — trains your models, auto-triggers submission if the model clears the threshold
+1. **`dbt_dag`** — builds your models from the raw data (~30 seconds)
+2. **`train`** — trains your models, auto-triggers submission if the model clears the threshold
+
+That's it. Re-trigger `dbt_dag` after editing your features, then re-trigger `train` to submit again.
 
 ---
 
@@ -65,12 +68,13 @@ Trigger DAGs in this order from the Airflow UI:
 | File | What to do |
 |---|---|
 | `include/dbt/models/intermediate/int_shots.sql` | Add features |
-| `functions/nba-train/main.py` | Uncomment models, add feature logic |
-| `dags/train.py` | Add configs to `MODEL_CONFIGS`, adjust `DEPLOY_THRESHOLD` |
+| `dags/train.py` | Add `build_features()` logic, uncomment models, add configs to `MODEL_CONFIGS` |
 
-After editing the function, redeploy:
-```bash
-bash functions/deploy.sh
-```
+---
 
-After editing dbt, re-trigger `dbt_dag` from the UI.
+## Why no ingestion DAG?
+
+The raw play-by-play data is fixed for this exercise — everyone needs the same starting point
+and the data doesn't change during class. Shipping `nba.duckdb` directly means you can focus
+on the ML pipeline rather than data ingestion. In production you'd have an ingestion step;
+we built one earlier this semester.
