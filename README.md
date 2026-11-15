@@ -28,9 +28,11 @@ cp .env.example .env
 ```
 Open `.env` and set your team number.
 
-Then run these to set the remaining paths automatically:
 ```bash
 echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
+```
+
+```bash
 echo "DBT_EXECUTABLE_PATH=$(which dbt)" >> .env
 ```
 
