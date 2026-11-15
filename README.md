@@ -22,12 +22,7 @@ cd ba882-ml2-challenge
 bash setup/install_astro.sh
 ```
 
-**4. Install dbt**
-```bash
-pip install dbt-duckdb
-```
-
-**5. Configure your environment**
+**4. Configure your environment**
 ```bash
 cp .env.example .env
 ```
@@ -38,16 +33,16 @@ echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
 ```
 
 ```bash
-echo "DBT_EXECUTABLE_PATH=$(which dbt)" >> .env
+echo "DBT_EXECUTABLE_PATH=$(pwd)/.venv/bin/dbt" >> .env
 ```
 
-**6. Deploy your Cloud Function**
+**5. Deploy your Cloud Function**
 ```bash
 bash functions/deploy.sh
 ```
 Copy the URL it prints. Paste it into `.env` as `TRAIN_FUNCTION_URL`.
 
-**7. Start Airflow**
+**6. Start Airflow**
 ```bash
 astro dev start
 ```
