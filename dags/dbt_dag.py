@@ -30,6 +30,7 @@ dbt_dag = DbtDag(
     schedule=None,
     start_date=datetime(2026, 1, 1),
     catchup=False,
+    max_active_tasks=1,
     tags=["nba", "dbt"],
     project_config=ProjectConfig(
         dbt_project_path=DBT_PROJECT_PATH,
