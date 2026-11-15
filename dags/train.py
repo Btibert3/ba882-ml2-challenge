@@ -36,9 +36,11 @@ TRAIN_FUNCTION_URL = os.environ.get("TRAIN_FUNCTION_URL", "")
 DEPLOY_THRESHOLD = 0.55
 
 # -----------------------------------------------------------------------
-# Add configs here to run more experiments in parallel.
-# Each entry maps to one task in the Airflow graph.
-# Uncomment the extra rows or add your own.
+# Each entry here becomes one parallel task in the Airflow graph.
+# "algorithm" must match a block in functions/nba-train/main.py.
+# "hyperparameters" are passed directly to the sklearn model constructor —
+# for example, n_estimators=100 is the same as RandomForestClassifier(n_estimators=100).
+# Uncomment rows to run more experiments, or add your own.
 # -----------------------------------------------------------------------
 MODEL_CONFIGS = [
     {"algorithm": "logistic_regression", "hyperparameters": {"max_iter": 1000}},

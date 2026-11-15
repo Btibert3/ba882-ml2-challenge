@@ -72,7 +72,11 @@ def task(request):
     )
 
     # ------------------------------------------------------------------
-    # Add a matching elif block here when you add configs to the train DAG
+    # The algorithm name must match what you set in MODEL_CONFIGS in train.py.
+    # hyperparams is the dict you passed under "hyperparameters" — it gets
+    # unpacked directly into the sklearn constructor, so {"n_estimators": 100}
+    # becomes RandomForestClassifier(n_estimators=100).
+    # Add a matching elif block when you add a new algorithm to MODEL_CONFIGS.
     # ------------------------------------------------------------------
     if algorithm == "logistic_regression":
         model = LogisticRegression(**hyperparams, random_state=42, max_iter=1000)
