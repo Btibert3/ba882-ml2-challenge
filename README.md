@@ -59,7 +59,7 @@ Open the web preview on port 8080. Log in with `admin` / `admin`.
 
 Trigger DAGs in this order from the Airflow UI:
 
-1. **`ingest`** — loads raw data into DuckDB, then auto-triggers dbt
+1. **`ingest`** — loads raw data into DuckDB, then auto-triggers dbt (~4 minutes total; the final `load_plays` step takes ~3 minutes)
 2. **`dbt_dag`** — builds your models (re-trigger this after editing dbt, no need to re-ingest)
 3. **`train`** — trains your models, auto-triggers submission if the model clears the threshold
 

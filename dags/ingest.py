@@ -39,7 +39,7 @@ def get_conn():
 )
 def ingest():
 
-    @task()
+    @task(retries=2)
     def fetch_teams():
         resp = requests.get(f"{API_BASE}-teams.us-east.modal.run", timeout=30)
         resp.raise_for_status()
@@ -62,7 +62,7 @@ def ingest():
         con.close()
         print(f"loaded {len(teams)} teams")
 
-    @task()
+    @task(retries=2)
     def fetch_games():
         resp = requests.get(f"{API_BASE}-games.us-east.modal.run", timeout=30)
         resp.raise_for_status()
@@ -121,7 +121,7 @@ def ingest():
         """)
         con.close()
 
-    @task()
+    @task(retries=2)
     def fetch_plays(game_id: str) -> list:
         """Fetch one game's plays from the API and return them — no DB write here."""
         resp = requests.get(
