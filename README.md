@@ -26,10 +26,13 @@ pip install dbt-duckdb
 ```bash
 cp .env.example .env
 ```
-Then open `.env` and fill in:
-- `TEAM_NUMBER` — your team number
-- `DUCKDB_PATH` — run `echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env`
-- `DBT_EXECUTABLE_PATH` — run `which dbt`, paste the path
+Open `.env` and set your team number.
+
+Then run these to set the remaining paths automatically:
+```bash
+echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
+echo "DBT_EXECUTABLE_PATH=$(which dbt)" >> .env
+```
 
 **5. Start Airflow**
 ```bash
