@@ -36,20 +36,15 @@ echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
 echo "DBT_EXECUTABLE_PATH=$(which dbt)" >> .env
 ```
 
-**5. Start Airflow**
-```bash
-astro dev start
-```
-
-**6. Deploy your Cloud Function**
+**5. Deploy your Cloud Function**
 ```bash
 bash functions/deploy.sh
 ```
 Copy the URL it prints. Paste it into `.env` as `TRAIN_FUNCTION_URL`.
 
-**7. Restart Airflow to pick up the new URL**
+**6. Start Airflow**
 ```bash
-astro dev restart
+astro dev start
 ```
 
 ---
