@@ -182,3 +182,35 @@ Then download the zip from the Cloud Shell Editor file browser and submit it to 
 ## Why no ingestion DAG?
 
 The data is fixed for this exercise — everyone needs the same starting point. In production you'd have an ingestion pipeline; we built one earlier this semester. Here we ship `nba.duckdb` so you can focus on features and models.
+
+---
+
+## Freeing up Cloud Shell storage
+
+Cloud Shell gives you 5 GB. If you hit the storage warning, the two biggest culprits are the Python virtual environment and the pip/package cache. Both are safe to delete — the venv can be recreated, and the cache rebuilds automatically.
+
+**Check your current usage:**
+```bash
+df -h ~
+```
+
+**See what's taking space:**
+```bash
+du -sh ~/* ~/.cache 2>/dev/null | sort -rh | head -20
+```
+
+**Delete the virtual environment** (largest item — often 800 MB+):
+```bash
+rm -rf ~/ba882-ml2-challenge/.venv
+```
+
+**Delete the pip/package cache:**
+```bash
+rm -rf ~/.cache
+```
+
+These two commands typically free 1.5–2 GB. You do not need to restart Airflow — the venv is only used by dbt directly (via `DBT_EXECUTABLE_PATH`), not by the Astro containers. If you need dbt outside of Airflow, recreate the venv with:
+```bash
+cd ~/ba882-ml2-challenge
+uv venv .venv && uv pip install dbt-duckdb
+```
