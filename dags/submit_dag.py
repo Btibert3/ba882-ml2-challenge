@@ -13,7 +13,7 @@ import requests
 from airflow.decorators import dag, task
 
 API_BASE = os.environ.get("API_BASE", "https://btibert-bu--ba882-nba-ship-it")
-TEAM_NAME = os.environ.get("TEAM_NAME", "unknown-team")
+TEAM_NUMBER = os.environ.get("TEAM_NUMBER", "0")
 
 
 @dag(
@@ -37,7 +37,7 @@ def submit_dag():
             raise ValueError("No predictions received — check that the train DAG completed successfully")
 
         payload = {
-            "team": TEAM_NAME,
+            "team": TEAM_NUMBER,
             "predictions": predictions,
         }
 
