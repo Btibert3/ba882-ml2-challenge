@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 
 import requests
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 
 API_BASE = os.environ.get("API_BASE", "https://btibert-bu--ba882-nba-ship-it")
 TEAM_NUMBER = os.environ.get("TEAM_NUMBER", "0")

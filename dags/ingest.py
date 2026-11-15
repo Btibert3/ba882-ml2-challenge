@@ -20,7 +20,7 @@ from pathlib import Path
 
 import duckdb
 import requests
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 API_BASE = os.environ.get("API_BASE", "https://btibert-bu--ba882-nba-ship-it")

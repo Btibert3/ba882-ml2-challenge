@@ -25,9 +25,8 @@ from pathlib import Path
 
 import duckdb
 import requests
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from airflow.operators.empty import EmptyOperator
 
 DUCKDB_PATH = os.environ.get("DUCKDB_PATH", str((Path(__file__).parent / "../nba.duckdb").resolve()))
 TRAIN_FUNCTION_URL = os.environ.get("TRAIN_FUNCTION_URL", "")
@@ -121,13 +120,15 @@ def train():
         wait_for_completion=False,
     )
 
-    skip = EmptyOperator(task_id="skip")
+    @task()
+    def skip():
+        print(f"model did not clear threshold — skipping submission")
 
     data = load_data()
-    results = run_experiment.expand(config=MODEL_CONFIGS)(data=data)
+    results = run_experiment.partial(data=data).expand(config=MODEL_CONFIGS)
     best = pick_best(results)
     branch = should_deploy(best)
-    branch >> [trigger_submit, skip]
+    branch >> [trigger_submit, skip()]
 
 
 train()
