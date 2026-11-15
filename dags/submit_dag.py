@@ -5,6 +5,7 @@ Triggered automatically by the train DAG when your model clears the threshold.
 You should not need to edit this DAG.
 """
 
+import ast
 import json
 import os
 from datetime import datetime
@@ -30,7 +31,10 @@ def submit_dag():
         best = conf.get("best", {})
 
         if isinstance(best, str):
-            best = json.loads(best)
+            try:
+                best = json.loads(best)
+            except json.JSONDecodeError:
+                best = ast.literal_eval(best)
 
         predictions = best.get("predictions", [])
         if not predictions:
