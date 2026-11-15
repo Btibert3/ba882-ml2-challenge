@@ -1,5 +1,5 @@
--- Filter to field goal attempts only and join game context.
--- This is your feature engineering layer — add columns here.
+-- Field goal attempts only. This is your feature engineering layer.
+-- Add derived columns here, then promote them to gold_shots.
 
 with shots as (
     select * from {{ ref('stg_plays') }}
@@ -12,42 +12,32 @@ games as (
 
 joined as (
     select
+        -- Identifiers
         s.game_id,
         s.action_number,
-        s.period,
-        s.clock,
-        s.team_id,
-        s.team_tricode,
-        s.player_name,
-        s.shot_distance,
-        s.shot_value,
-        s.sub_type,
+
+        -- Raw coordinates
         s.x,
         s.y,
-        s.location,
-        s.description,
+
+        -- Target
         s.shot_result,
 
-        -- Game context
-        g.home_team,
-        g.away_team,
-        g.game_date,
-
-        -- Is the shooter on the home team?
-        case when s.location = 'h' then 1 else 0 end as is_home_shooter,
-
-        -- Parse clock string (PT11M32.00S) to seconds remaining in period
+        -- Example: parse the clock string (PT11M32.00S) to seconds remaining
         cast(
             regexp_extract(s.clock, 'PT(\d+)M', 1) as integer
         ) * 60
         + cast(
             regexp_extract(s.clock, 'M(\d+)', 1) as integer
-        ) as clock_seconds
+        ) as clock_seconds,
+
+        -- Example: home or away shooter (not a strong feature, but shows the pattern)
+        case when s.location = 'h' then 1 else 0 end as is_home_shooter
 
         -- ----------------------------------------------------------------
-        -- TODO: add your own features below
-        -- Ideas: shot angle from basket, distance buckets, is_three,
-        --        clutch time (period=4 and clock_seconds < 120), etc.
+        -- Add your own features below.
+        -- Hint: stg_plays and stg_games have more columns than what's shown
+        -- here. Think about what you know at the moment a shot is taken.
         -- ----------------------------------------------------------------
 
     from shots s

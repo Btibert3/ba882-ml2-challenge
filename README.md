@@ -47,7 +47,7 @@ echo "DBT_EXECUTABLE_PATH=$(pwd)/.venv/bin/dbt" >> .env
 astro dev start
 ```
 
-Open the web preview on port 8080. 
+Open the web preview on port 8080.
 
 ---
 
@@ -83,6 +83,10 @@ MODEL_CONFIGS = [
     {"algorithm": "gradient_boosting",   "hyperparameters": {"n_estimators": 100, "learning_rate": 0.1}},
 ]
 ```
+
+### 4. Go further
+
+The DAGs are starting points, not limits. You can add new dbt models, new Airflow DAGs, new algorithms, or additional preprocessing steps in `train.py`. Just be careful — if you break the pipeline, nothing submits. Keep the existing flow working and extend from there.
 
 ---
 
@@ -131,28 +135,48 @@ MODEL_CONFIGS = [
 
 **`stg_plays`** — cleaned raw plays, renamed columns (e.g. `xLegacy` → `x`). All event types.
 
-**`int_shots`** — field goal attempts only. Has everything: game context, clock parsed to seconds, home/away indicator. **This is where you add features.**
+**`int_shots`** — field goal attempts only. Has game context, clock parsed to seconds, home/away indicator, and more. **This is where you add features.**
 
-**`gold_shots`** — what the training DAG reads. Intentionally minimal — `game_id`, `action_number`, `x`, `y`, `shot_result`. You earn features by adding columns here from `int_shots`.
+**`gold_shots`** — what the training DAG reads. Intentionally minimal — `game_id`, `action_number`, `x`, `y`, `shot_result`. You earn features by pulling them up from `int_shots`.
 
 ---
 
 ## Tips
 
-- **Features flow automatically** — every column in `gold_shots` except `game_id`, `action_number`, and `shot_result` is used as a model feature. Add a column to gold, re-run dbt, re-run train.
-- **`int_shots` has everything** — look there before writing new SQL. `clock_seconds`, `is_home_shooter`, shot type, game context are all already computed.
-- **Non-numeric columns fill to 0** — encode categoricals (e.g. shot type) as integers in dbt before promoting to gold.
-- **`shot_result` is NULL for eval rows** — these are the shots you're predicting. Never filter them out of gold.
-- **You must submit all 250 eval rows** to appear on the leaderboard.
+**The task:** predict whether a shot goes in — binary classification, `Made` vs `Missed`.
+
+**Features flow automatically** — every column in `gold_shots` except `game_id`, `action_number`, and `shot_result` is used as a model feature. Add a column to gold, re-run dbt, re-run train. No Python changes needed.
+
+**`int_shots` has more than gold** — `period`, `clock_seconds`, `is_home_shooter`, player, team, shot type are all there. Pull what you want up into gold.
+
+**Non-numeric columns fill to 0** — encode categoricals as integers in dbt before promoting to gold. For example, `case when sub_type = 'Jump Shot' then 1 else 0 end`.
+
+**`shot_result` is NULL for eval rows** — these are the shots you're predicting. Never filter them out of gold or the submission will be incomplete.
+
+**You must submit all 250 eval rows** to appear on the leaderboard.
+
+**Use AI to explore the data.** You can download `nba.duckdb` directly from the Cloud Shell Editor file browser, then open it locally with [DuckDB CLI](https://duckdb.org/docs/installation/), [DBeaver](https://dbeaver.io/), or any DuckDB-compatible tool. You can also query it right in the terminal:
+```bash
+duckdb nba.duckdb "SELECT * FROM int_shots LIMIT 5"
+```
+Ask an AI to help you think through what features might predict whether a shot goes in. What does a player, coach, or analyst know at the moment of a shot?
+
+---
+
+## Submitting your work
+
+At the end of class, zip your project folder from Cloud Shell and download it:
+
+```bash
+cd ~ && zip -r ba882-ml2-challenge.zip ba882-ml2-challenge --exclude "ba882-ml2-challenge/.venv/*" --exclude "ba882-ml2-challenge/.astro/standalone/*"
+```
+
+Then download the zip from the Cloud Shell Editor file browser and submit it to Blackboard.
+
+**Grading:** you are scored on leaderboard accuracy **and** on the quality of your pipeline — your dbt models, DAG structure, and feature engineering work. A great leaderboard score built without dbt and Airflow won't earn full credit. The instructor will review the work inside your zip.
 
 ---
 
 ## Why no ingestion DAG?
 
 The data is fixed for this exercise — everyone needs the same starting point. In production you'd have an ingestion pipeline; we built one earlier this semester. Here we ship `nba.duckdb` so you can focus on features and models.
-
----
-
-## Submission
-
-You get credit for leaderboard accuracy **and** for using dbt and Airflow correctly. Getting a good score by circumventing the pipeline won't earn full credit.
