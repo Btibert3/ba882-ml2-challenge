@@ -122,7 +122,8 @@ def ingest():
         con.close()
 
     @task()
-    def fetch_plays(game_id: str):
+    def fetch_plays(game_id: str) -> list:
+        """Fetch one game's plays from the API and return them — no DB write here."""
         resp = requests.get(
             f"{API_BASE}-plays.us-east.modal.run",
             params={"game_id": game_id},
@@ -130,40 +131,46 @@ def ingest():
         )
         resp.raise_for_status()
         plays = resp.json()
+        shots = sum(1 for p in plays if p.get("isFieldGoal") == 1)
+        print(f"game {game_id}: {len(plays)} events, {shots} shots")
+        return plays
 
+    @task()
+    def load_plays(all_plays: list):
+        """Write all games' plays into DuckDB in one pass — avoids concurrent write conflicts."""
         con = get_conn()
+        rows = []
+        for plays in all_plays:
+            for p in plays:
+                rows.append((
+                    str(p.get("gameId", "")).zfill(10),
+                    p.get("actionNumber"),
+                    p.get("actionId"),
+                    p.get("clock"),
+                    p.get("period"),
+                    p.get("teamId"),
+                    p.get("teamTricode"),
+                    p.get("personId"),
+                    p.get("playerName"),
+                    p.get("xLegacy"),
+                    p.get("yLegacy"),
+                    p.get("shotDistance"),
+                    p.get("shotResult"),
+                    p.get("isFieldGoal"),
+                    p.get("scoreHome"),
+                    p.get("scoreAway"),
+                    p.get("location"),
+                    p.get("description"),
+                    p.get("actionType"),
+                    p.get("subType"),
+                    p.get("shotValue"),
+                ))
         con.executemany("""
             INSERT OR IGNORE INTO raw_plays
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, [
-            (
-                str(p.get("gameId", "")).zfill(10),
-                p.get("actionNumber"),
-                p.get("actionId"),
-                p.get("clock"),
-                p.get("period"),
-                p.get("teamId"),
-                p.get("teamTricode"),
-                p.get("personId"),
-                p.get("playerName"),
-                p.get("xLegacy"),
-                p.get("yLegacy"),
-                p.get("shotDistance"),
-                p.get("shotResult"),
-                p.get("isFieldGoal"),
-                p.get("scoreHome"),
-                p.get("scoreAway"),
-                p.get("location"),
-                p.get("description"),
-                p.get("actionType"),
-                p.get("subType"),
-                p.get("shotValue"),
-            )
-            for p in plays
-        ])
+        """, rows)
         con.close()
-        shots = sum(1 for p in plays if p.get("isFieldGoal") == 1)
-        print(f"game {game_id}: {len(plays)} events, {shots} shots")
+        print(f"loaded {len(rows)} total play events")
 
     trigger_dbt = TriggerDagRunOperator(
         task_id="trigger_dbt",
@@ -175,8 +182,9 @@ def ingest():
     game_ids = fetch_games()
     setup = setup_plays_table()
     plays = fetch_plays.expand(game_id=game_ids)
+    loaded = load_plays(plays)
 
-    [teams, setup] >> plays >> trigger_dbt
+    [teams, setup] >> plays >> loaded >> trigger_dbt
 
 
 ingest()
