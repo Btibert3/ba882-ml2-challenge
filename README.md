@@ -159,7 +159,9 @@ The DAGs are starting points, not limits. You can add new dbt models, new Airflo
 ```bash
 duckdb nba.duckdb "SELECT * FROM int_shots LIMIT 5"
 ```
-Ask an AI to help you think through what features might predict whether a shot goes in. What does a player, coach, or analyst know at the moment of a shot?
+Ask an AI to help you think through what features might predict whether a shot goes in. Let the AI (Gemini inside Cloud Shell) help you build out features and model the data.  You have freedom to create different models and approaches, just document your work!  
+
+There are plenty of features and ideas that are not included in this repo.
 
 ---
 
@@ -173,7 +175,7 @@ cd ~ && zip -r ba882-ml2-challenge.zip ba882-ml2-challenge --exclude "ba882-ml2-
 
 Then download the zip from the Cloud Shell Editor file browser and submit it to Blackboard.
 
-**Grading:** you are scored on leaderboard accuracy **and** on the quality of your pipeline — your dbt models, DAG structure, and feature engineering work. A great leaderboard score built without dbt and Airflow won't earn full credit. The instructor will review the work inside your zip.
+**Grading:** you are evaluated on leaderboard accuracy **and** on the quality of your pipeline — your dbt models, DAG structure, and feature engineering work. A great leaderboard score built without dbt and Airflow won't earn full credit. The instructor will review the work inside your zip.
 
 ---
 
