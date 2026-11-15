@@ -6,29 +6,44 @@ Predict whether an NBA shot goes in. Build a pipeline, train a model, climb the 
 
 ## Setup
 
-**1. Install dependencies**
+**1. Clone the repo**
+```bash
+git clone https://github.com/btibert3/ba882-ml2-challenge.git
+cd ba882-ml2-challenge
+```
+
+**2. Install the Astro CLI**
 ```bash
 bash setup/install_astro.sh
+```
+
+**3. Install dbt**
+```bash
 pip install dbt-duckdb
 ```
 
-**2. Configure your environment**
+**4. Configure your environment**
 
-Open `.env` and update three values:
+Open `.env` and update:
 - `TEAM_NUMBER` — your team number
-- `DUCKDB_PATH` — run `echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env`
-- `DBT_EXECUTABLE_PATH` — run `which dbt` and paste the result
+- `DUCKDB_PATH` — run this, it sets it automatically:
+  ```bash
+  echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
+  ```
+- `DBT_EXECUTABLE_PATH` — run `which dbt`, paste the path into `.env`
 
-**3. Start Airflow**
+**5. Start Airflow**
 ```bash
 astro dev start
 ```
 
-**4. Deploy your Cloud Function**
+**6. Deploy your Cloud Function**
 ```bash
 bash functions/deploy.sh
 ```
-Paste the URL into `.env` as `TRAIN_FUNCTION_URL`, then restart:
+Copy the URL it prints. Paste it into `.env` as `TRAIN_FUNCTION_URL`.
+
+**7. Restart Airflow to pick up the new URL**
 ```bash
 astro dev restart
 ```
