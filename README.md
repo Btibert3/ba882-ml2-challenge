@@ -47,7 +47,7 @@ echo "DBT_EXECUTABLE_PATH=$(pwd)/.venv/bin/dbt" >> .env
 astro dev start
 ```
 
-Open the web preview on port 8080. Log in with `admin` / `admin`.
+Open the web preview on port 8080. 
 
 ---
 
