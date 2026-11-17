@@ -34,7 +34,7 @@ bash setup/install_astro.sh
 cp .env.example .env
 ```
 
-Open `.env` and set your team number.
+Open `.env` and __manually__ set your team number at the top of the file.  In a terminal (inside the repo you cloned above), run the commands below to edit your .env file for values that are needed.
 
 ```bash
 echo "DUCKDB_PATH=$(pwd)/nba.duckdb" >> .env
