@@ -64,7 +64,7 @@ Open the web preview on port 8080.
 
 ---
 
-## Where to make changes
+## Where to make changes to improve your team's rank!
 
 ### 1. Add features — `include/dbt/models/intermediate/int_shots.sql`
 
