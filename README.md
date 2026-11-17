@@ -55,6 +55,8 @@ Open the web preview on port 8080.
 
 ## The loop
 
+> __NOTE__: Make sure the dags are activated (toggled on) within Airflow.
+
 1. **`dbt_dag`** — builds your models (~30 seconds). Re-run this every time you edit your team's dbt project.
 2. **`train`** — trains all your model configs in parallel, picks the best, auto-submits if it clears the threshold.
 
