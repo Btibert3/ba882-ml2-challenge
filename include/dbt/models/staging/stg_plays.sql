@@ -20,8 +20,6 @@ select
     scoreHome    as score_home,
     scoreAway    as score_away,
     location,
-    description,
-    actionType   as action_type,
     subType      as sub_type,
     shotValue    as shot_value
 from source
