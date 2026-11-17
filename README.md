@@ -4,6 +4,8 @@ Predict whether an NBA shot goes in. Build features, train models, climb the lea
 
 The raw play-by-play data is already in `nba.duckdb`. Your pipeline: **dbt → train → submit**.
 
+> Below emphasizes a local-first approach.  The data are small and intended to remove moving parts like BigQuery, GCS, etc.  For example, the ingestion (Data engineering) has been provided to you in the form of a duckdb database.  Model training is run on the Airflow dag.  It works for this challenge to simplify your work, but not something you would follow for your team project or after Questrom.
+
 ---
 
 ## Setup
