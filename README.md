@@ -8,6 +8,8 @@ The raw play-by-play data is already in `nba.duckdb`. Your pipeline: **dbt → t
 
 ## Setup
 
+> Below is assuming Google Cloud Shell Editor at the root of your account (when you first log into ide.cloud.google.com)
+
 **1. Set your GCP project**
 ```bash
 gcloud config set project YOUR_PROJECT_ID
